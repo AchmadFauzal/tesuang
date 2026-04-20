@@ -11,12 +11,12 @@ model = YOLO("best_model.pt")
 # Mapping nominal
 nominal_map = {
     0: 1000,
-    1: 10000,
-    2: 100000,
-    3: 2000,
+    1: 2000,
+    2: 5000,
+    3: 10000,
     4: 20000,
-    5: 5000,
-    6: 50000
+    5: 50000,
+    6: 100000
 }
 
 st.title("💰 Sistem Deteksi dan Perhitungan Uang Rupiah")
