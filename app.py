@@ -15,7 +15,7 @@ def load_model():
 model = load_model()
 
 # =========================
-# MAPPING NOMINAL (WAJIB SAMA SAAT TRAINING)
+# MAPPING NOMINAL
 # =========================
 nominal_map = {
     0: 1000,
@@ -34,16 +34,14 @@ st.title("💰 Sistem Deteksi & Perhitungan Uang Rupiah")
 
 mode = st.radio("Pilih Metode Input:", ["Upload Gambar", "Kamera"])
 
-CONF_THRESHOLD = st.slider("Confidence Threshold", 0.1, 1.0, 0.5)
-
 # =========================
-# PROCESS IMAGE
+# PROCESS IMAGE (NO THRESHOLD)
 # =========================
 def process_image(image):
     results = model(image)
     boxes = results[0].boxes
 
-    # Gambar hasil deteksi
+    # gambar hasil deteksi
     img = results[0].plot()
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -56,13 +54,10 @@ def process_image(image):
             cls = int(box.cls[0])
             conf = float(box.conf[0])
 
-            # FILTER CONFIDENCE
-            if conf < CONF_THRESHOLD:
-                continue
-
+            # TANPA FILTER → semua dihitung
             counter[cls] += 1
 
-    # HITUNG TOTAL
+    # hitung total
     for kelas in sorted(counter.keys()):
         nominal = nominal_map.get(kelas, 0)
         jumlah = counter[kelas]
@@ -92,12 +87,19 @@ def show_result(image_np):
 
     st.success(f"💰 TOTAL UANG: Rp {total:,.0f}")
 
-    # DEBUG (optional)
+    # DEBUG
     with st.expander("🔍 Debug Info"):
-        st.write(counter)
+        debug_list = []
+        results = model(image_np)
+        for box in results[0].boxes:
+            debug_list.append({
+                "class_id": int(box.cls[0]),
+                "confidence": float(box.conf[0])
+            })
+        st.write(debug_list)
 
 # =========================
-# INPUT HANDLING
+# INPUT
 # =========================
 if mode == "Upload Gambar":
     uploaded_file = st.file_uploader("Upload gambar uang", type=["jpg", "png", "jpeg"])
@@ -105,7 +107,6 @@ if mode == "Upload Gambar":
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
         image_np = np.array(image)
-
         show_result(image_np)
 
 else:
@@ -114,5 +115,4 @@ else:
     if camera_image is not None:
         image = Image.open(camera_image)
         image_np = np.array(image)
-
         show_result(image_np)
